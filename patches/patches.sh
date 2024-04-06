@@ -10,6 +10,7 @@ patch_files=(
     fs/open.c
     fs/read_write.c
     fs/stat.c
+    fs/namespace.c
     drivers/input/input.c
 )
 
@@ -63,6 +64,48 @@ for i in "${patch_files[@]}"; do
             sed -i '/int vfs_fstatat(int dfd, const char __user \*filename, struct kstat \*stat,/i\#ifdef CONFIG_KSU\nextern int ksu_handle_stat(int *dfd, const char __user **filename_user, int *flags);\n#endif\n' fs/stat.c
             sed -i '/if ((flag & ~(AT_SYMLINK_NOFOLLOW | AT_NO_AUTOMOUNT |/i\	#ifdef CONFIG_KSU\n	ksu_handle_stat(&dfd, &filename, &flag);\n	#endif\n' fs/stat.c
         fi
+        ;;
+
+    ## namespace.c
+    fs/namespace.c)
+        file="fs/namespace.c"
+        start_line=$(grep -n "static inline bool may_mandlock(void)" $file | cut -d: -f1)
+        end_line=$(awk -v start="$start_line" '$0 ~ /^#endif/ && NR > start {print NR; exit}' $file)
+        ((end_line++))
+        content="static int can_umount(const struct path *path, int flags)
+{
+	struct mount *mnt = real_mount(path->mnt);
+
+	if (flags & ~(MNT_FORCE | MNT_DETACH | MNT_EXPIRE | UMOUNT_NOFOLLOW))
+		return -EINVAL;
+	if (!may_mount())
+		return -EPERM;
+	if (path->dentry != path->mnt->mnt_root)
+		return -EINVAL;
+	if (!check_mnt(mnt))
+		return -EINVAL;
+	if (mnt->mnt.mnt_flags & MNT_LOCKED) /* Check optimistically */
+		return -EINVAL;
+	if (flags & MNT_FORCE && !capable(CAP_SYS_ADMIN))
+		return -EPERM;
+	return 0;
+}
+
+int path_umount(struct path *path, int flags)
+{
+	struct mount *mnt = real_mount(path->mnt);
+	int ret;
+
+	ret = can_umount(path, flags);
+	if (!ret)
+		ret = do_umount(mnt, flags);
+
+	/* we mustn't call path_put() as that would clear mnt_expiry_mark */
+	dput(path->dentry);
+	mntput_no_expire(mnt);
+	return ret;
+}"
+        awk -v line="$end_line" -v text="$content" 'NR==line {print $0 RS text RS; next} 1' "$file" > temp && mv temp "$file"
         ;;
 
     # drivers/input changes
