@@ -192,7 +192,7 @@ jobs:
         $GITHUB_WORKSPACE/patches/extract-ikconfig boot.img > device_defconfig
         ls -al
         echo "888"
-        cp device_deconfig $GITHUB_WORKSPACE/kernel_workspace/android-kernel/arch/arm64/configs/${{ env.KERNEL_CONFIG }}
+        cp device_defconfig $GITHUB_WORKSPACE/kernel_workspace/android-kernel/arch/arm64/configs/${{ env.KERNEL_CONFIG }}
         cd ../ && rm -rf boot_tmp
 
     - name: Download source boot image
