@@ -281,6 +281,7 @@ jobs:
         echo "3"
         if [ ${{ env.APPLY_KSU_PATCH }} = true ]; then
           scripts/config --file ./arch/arm64/configs/${{ env.KERNEL_CONFIG }} -e CONFIG_KSU
+          bash $GITHUB_WORKSPACE/patches/patches.sh
           echo "4"
         fi
         echo "5"
