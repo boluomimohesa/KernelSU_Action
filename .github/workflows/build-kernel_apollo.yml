@@ -281,10 +281,14 @@ jobs:
         echo "3"
         if [ ${{ env.APPLY_KSU_PATCH }} = true ]; then
           scripts/config --file ./arch/arm64/configs/${{ env.KERNEL_CONFIG }} -e CONFIG_KSU
+          echo "4"
         fi
-        echo "4"
+        echo "5"
 
         make -j$(nproc --all) CC=clang O=out ARCH=${{ env.ARCH }} ${{ env.CUSTOM_CMDS }} ${{ env.EXTRA_CMDS }} ${{ env.GCC_64 }} ${{ env.GCC_32 }} ${{ env.KERNEL_CONFIG }}
+
+        cat out/.config
+        exit 1
         
         if [ ${{ env.ENABLE_CCACHE }} = true ]; then
             make -j$(nproc --all) CC="ccache clang" O=out ARCH=${{ env.ARCH }} ${{ env.CUSTOM_CMDS }} ${{ env.EXTRA_CMDS }} ${{ env.GCC_64 }} ${{ env.GCC_32 }}
