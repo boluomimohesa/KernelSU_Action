@@ -268,19 +268,20 @@ jobs:
         make -j$(nproc --all) CC=clang O=out ARCH=${{ env.ARCH }} ${{ env.CUSTOM_CMDS }} ${{ env.EXTRA_CMDS }} ${{ env.GCC_64 }} ${{ env.GCC_32 }} ${{ env.KERNEL_CONFIG }}
         
         echo "1"
+
         scripts/config --file out/.config \
           -e CONFIG_BUILD_ARM64_APPENDED_DTB_IMAGE \
           -e CONFIG_IMG_GZ_DTB \
           -e CONFIG_BUILD_ARM64_KERNEL_COMPRESSION_GZIP \
           -d CONFIG_BUILD_ARM64_UNCOMPRESSED_KERNEL \
           --set-str CONFIG_BUILD_ARM64_APPENDED_KERNEL_IMAGE_NAME Image.gz-dtb \
-          --set-str CONFIG_BUILD_ARM64_APPENDED_DTB_IMAGE_NAMES 
+          --set-str CONFIG_BUILD_ARM64_APPENDED_DTB_IMAGE_NAMES ""
+
         echo "2"
 
         echo "3"
         if [ ${{ env.APPLY_KSU_PATCH }} = true ]; then
-          scripts/config --file out/.config \
-            -e CONFIG_KSU
+          scripts/config --file out/.config -e CONFIG_KSU
         fi
         echo "4"
 
