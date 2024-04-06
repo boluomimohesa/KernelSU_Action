@@ -268,7 +268,7 @@ jobs:
         make -j$(nproc --all) CC=clang O=out ARCH=${{ env.ARCH }} ${{ env.CUSTOM_CMDS }} ${{ env.EXTRA_CMDS }} ${{ env.GCC_64 }} ${{ env.GCC_32 }} ${{ env.KERNEL_CONFIG }}
         
         echo "1"
-        scripts/config --file out/.config \ 
+        scripts/config --file out/.config \
           -e CONFIG_BUILD_ARM64_APPENDED_DTB_IMAGE \
           -e CONFIG_IMG_GZ_DTB \
           -e CONFIG_BUILD_ARM64_KERNEL_COMPRESSION_GZIP \
@@ -319,6 +319,7 @@ jobs:
         cp android-kernel/out/arch/${{ env.ARCH }}/boot/${{ env.KERNEL_IMAGE_NAME }} AnyKernel3/
         if [ ${{ env.CHECK_DTBO_IS_OK }} = true ]; then
             cp android-kernel/out/arch/${{ env.ARCH }}/boot/dtbo.img AnyKernel3/
+            cp android-kernel/out/.config AnyKernel3/
         fi
         rm -rf AnyKernel3/.git* AnyKernel3/README.md
 
