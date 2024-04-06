@@ -190,6 +190,8 @@ jobs:
         curl -SsL ${{ env.BOOT_IMG_SOURCE }} -o boot.img
         chmod +x $GITHUB_WORKSPACE/patches/extract-ikconfig
         $GITHUB_WORKSPACE/patches/extract-ikconfig boot.img > device_defconfig
+        ls -al
+        echo "888"
         cp device_deconfig $GITHUB_WORKSPACE/kernel_workspace/android-kernel/arch/arm64/configs/${{ env.KERNEL_CONFIG }}
         cd ../ && rm -rf boot_tmp
 
@@ -256,12 +258,16 @@ jobs:
         export PATH=$GITHUB_WORKSPACE/kernel_workspace/clang-aosp/bin:$PATH
         export KBUILD_BUILD_HOST=Github-Action
         export KBUILD_BUILD_USER=$(echo ${{ github.actor }} | tr A-Z a-z)
+        
+        ls -al $GITHUB_WORKSPACE/kernel_workspace/android-kernel/arch/arm64/configs/
+
         if [ ! -z ${{ env.KSU_EXPECTED_SIZE }} ] && [ ! -z ${{ env.KSU_EXPECTED_HASH }} ]; then
           export KSU_EXPECTED_SIZE=${{ env.KSU_EXPECTED_SIZE }}
           export KSU_EXPECTED_HASH=${{ env.KSU_EXPECTED_HASH }}
         fi
         make -j$(nproc --all) CC=clang O=out ARCH=${{ env.ARCH }} ${{ env.CUSTOM_CMDS }} ${{ env.EXTRA_CMDS }} ${{ env.GCC_64 }} ${{ env.GCC_32 }} ${{ env.KERNEL_CONFIG }}
-
+        
+        echo "1"
         scripts/config --file out/.config \ 
           -e CONFIG_BUILD_ARM64_APPENDED_DTB_IMAGE \
           -e CONFIG_IMG_GZ_DTB \
@@ -269,11 +275,14 @@ jobs:
           -d CONFIG_BUILD_ARM64_UNCOMPRESSED_KERNEL \
           --set-str CONFIG_BUILD_ARM64_APPENDED_KERNEL_IMAGE_NAME Image.gz-dtb \
           --set-str CONFIG_BUILD_ARM64_APPENDED_DTB_IMAGE_NAMES 
+        echo "2"
 
+        echo "3"
         if [ ${{ env.APPLY_KSU_PATCH }} = true ]; then
           scripts/config --file out/.config \
             -e CONFIG_KSU
         fi
+        echo "4"
 
         if [ ${{ env.ENABLE_CCACHE }} = true ]; then
             make -j$(nproc --all) CC="ccache clang" O=out ARCH=${{ env.ARCH }} ${{ env.CUSTOM_CMDS }} ${{ env.EXTRA_CMDS }} ${{ env.GCC_64 }} ${{ env.GCC_32 }}
